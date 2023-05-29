@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig
+} from 'axios'
 import qs from 'qs'
 
 interface RequestOptions {
@@ -24,6 +29,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   errNotice?: boolean
 }
 
+const isDev = process.env.BASE_ENV === 'development'
 class Request {
   instance: AxiosInstance
 
@@ -43,18 +49,21 @@ class Request {
       return data
     }
     this.$options = options
-    this.init(options)
+    this.init()
   }
 
-  init(options: RequestOptions): void {
+  init(): void {
     // 请求拦截
     this.instance.interceptors.request.use(
-      (config: RequestConfig) => {
+      (config: InternalAxiosRequestConfig) => {
+        if (isDev) {
+          config.url = `/api${config.url}`
+        }
         if (config.method === 'post') {
           if (config.headers && !config.headers['Content-Type']) {
             config.data = qs.stringify(config.data)
           }
-          config.headers['Content-Type'] = 'application/json'
+          config.headers!['Content-Type'] = 'application/json'
         }
         return config
       },
@@ -66,7 +75,7 @@ class Request {
     // 响应拦截
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        const { config } = response
+        const { config } = response as { config: RequestConfig }
         const code = response.data.result
         if (response.data) {
           if (code === 'ok') {
