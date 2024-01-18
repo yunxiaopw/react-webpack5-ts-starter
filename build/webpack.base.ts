@@ -4,7 +4,6 @@ import WebpackBar from 'webpackbar'
 import * as dotenv from 'dotenv'
 import { isDev } from './constants'
 
-const UnoCSS = require('@unocss/webpack').default
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
@@ -159,7 +158,6 @@ const baseConfig: Configuration = {
       basic: false, // 默认true，启用一个简单的日志报告器
       profile: false // 默认false，启用探查器。
     }),
-    UnoCSS()
   ],
   cache: {
     type: 'filesystem' // 使用文件缓存
