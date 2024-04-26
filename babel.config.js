@@ -23,7 +23,7 @@ module.exports = {
     '@babel/preset-typescript'
   ],
   plugins: [
-    ['@babel/plugin-proposal-decorators', { legacy: true }],
+    // ['@babel/plugin-proposal-decorators', { legacy: true }],
     // 如果是开发模式,就启动react热更新插件
     isDEV && require.resolve('react-refresh/babel')
   ].filter(Boolean) // 过滤空值

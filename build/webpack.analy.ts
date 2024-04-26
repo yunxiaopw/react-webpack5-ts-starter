@@ -1,9 +1,8 @@
 import { Configuration } from 'webpack'
 import { merge } from 'webpack-merge'
+import SpeedMeasurePlugin from 'speed-measure-webpack-plugin'
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import prodConfig from './webpack.prod'
-
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin')
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 // 引入webpack打包速度分析插件
 const smp = new SpeedMeasurePlugin()

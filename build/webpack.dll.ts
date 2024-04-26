@@ -1,24 +1,22 @@
 import path from 'path'
 import webpack, { Configuration, DllPlugin } from 'webpack'
-import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 
 const WebpackDllConfig: Configuration = {
   target: 'web',
   mode: 'production',
   entry: {
-    react: ['react', 'react-dom']
+    react: ['react', 'react-dom', 'react-router-dom']
   },
   output: {
     path: path.resolve(__dirname, 'dll'),
     publicPath: './',
-    filename: 'dll_[name].js',
-    library: 'dll_[name]_library'
+    filename: '[name].dll.js',
+    library: '[name]_[hash]_library'
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new DllPlugin({
       path: path.resolve(__dirname, 'dll', '[name].manifest.json'),
-      name: 'dll_[name]'
+      name: 'dll_[name]_[hash]'
     })
   ]
 }

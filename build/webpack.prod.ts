@@ -6,10 +6,7 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
 import CompressionPlugin from 'compression-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import baseConfig from './webpack.base'
-
-const glob = require('glob')
-const { PurgeCSSPlugin } = require('purgecss-webpack-plugin')
+import { baseConfig } from './webpack.base'
 
 const prodConfig: Configuration = merge(baseConfig, {
   mode: 'production',
@@ -25,21 +22,9 @@ const prodConfig: Configuration = merge(baseConfig, {
     }),
     new MiniCssExtractPlugin({
       filename: 'static/css/[name].[contenthash:8].css', // 抽离css的输出目录和名称
-      chunkFilename: 'static/css/[name].[contenthash:8].css'
+      chunkFilename: 'static/css/[name].[chunkhash:8].css'
     }),
-    // 清理无用css，检测src下所有tsx文件和public下index.html中使用的类名和id和标签名称
-    // 只打包这些文件中用到的样式
-    new PurgeCSSPlugin({
-      paths: glob.sync(`${path.join(__dirname, '../src')}/**/*`, {
-        nodir: true
-      }),
-      // 用 only 来指定 purgecss-webpack-plugin 的入口
-      only: ['dist'],
-      safelist: {
-        standard: [/^ant-/] // 过滤以ant-开头的类名，哪怕没用到也不删除
-      }
-    }),
-    // 打包时生成gzip文件
+    // 打包时生成gzip文件 需要在nginx配置开启gzip
     new CompressionPlugin({
       test: /\.(js|css)$/, // 只生成css,js压缩文件
       filename: '[path][base].gz', // 文件命名
@@ -56,38 +41,27 @@ const prodConfig: Configuration = merge(baseConfig, {
     realContentHash: true, // 开启真正的contenthash,
     // 减少入口文件打包的体积，运行时代码会独立抽离成一个runtime的文件
     runtimeChunk: {
-      name: 'mainifels'
+      name: entrypoint => `runtimechunk-${entrypoint.name}`
     },
-    // 还要在 package.json 中配置 "sideEffects": false,
-    // sideEffects: true, // 开启sideEffects
-    // usedExports: true,
-    minimize: true, // 开启terser
+    minimize: true, // 开启terser 告诉压缩工具，开启压缩
     minimizer: [
       new CssMinimizerPlugin(), // 压缩css
       new TerserPlugin({
         parallel: true, // 开启多线程压缩
         extractComments: false, // 是否将注释剥离到单独文件，默认是true
         terserOptions: {
+          ecma: 5,
           output: {
-            comments: false,
-            ecma: 5
+            comments: false
           },
-          sourceMap: true,
-          mangle: true,
+          sourceMap: false,
+          mangle: true, // 开启代码混淆
           compress: {
             ecma: 5,
             keep_fargs: false,
-            pure_getters: true,
-            hoist_funs: true,
-            pure_funcs: [
-              'console.log',
-              'classCallCheck',
-              '_classCallCheck',
-              '_possibleConstructorReturn',
-              'Object.freeze',
-              'invariant',
-              'warning'
-            ] // 删除console.log
+            pure_getters: true, // 代码压缩工具，对象的 getter 方法无副作用，没有使用的时候，可以删除
+            hoist_funs: true, // 启用函数提升
+            pure_funcs: ['console.log'] // 删除console.log
           }
         }
       })
@@ -95,18 +69,11 @@ const prodConfig: Configuration = merge(baseConfig, {
     splitChunks: {
       // include all types of chunks 支持异步和非异步共享chunk
       chunks: 'all',
-      minSize: 20000,
-      minRemainingSize: 0,
-      minChunks: 1,
-      maxAsyncRequests: 30,
-      maxInitialRequests: 30,
-      enforceSizeThreshold: 50000,
       // 分隔代码
       cacheGroups: {
         vendors: {
           // 提取node_modules代码
           test: /node_modules/, // 只匹配node_modules里面的模块
-          // name: 'vendors', // 提取文件命名为vendors,js后缀和chunkhash会自动加，可以不要定义固定的name
           minChunks: 1, // 只要使用一次就提取出来
           chunks: 'initial', // 只提取初始化就能获取到的模块,不管异步的
           minSize: 0, // 提取代码体积大于0就提取出来
@@ -134,7 +101,7 @@ const prodConfig: Configuration = merge(baseConfig, {
     }
   },
   performance: {
-    hints: false,
+    hints: 'warning',
     maxAssetSize: 4000000, // 整数类型（以字节为单位）
     maxEntrypointSize: 5000000 // 整数类型（以字节为单位）
   }

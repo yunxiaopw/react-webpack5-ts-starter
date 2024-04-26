@@ -5,9 +5,8 @@ const Home = () => {
     <div className='h-full text-center flex justify-center select-none all:transition-400'>
       <div className='ma'>
         <div className='text-[#000] text-5xl fw100 animate-bounce-alt animate-count-infinite animate-duration-1s'>
-          TailwindCSS
+          无极分享
         </div>
-        <div className='op30 text-lg fw300 m1'>TailwindCSS.</div>
       </div>
     </div>
   )

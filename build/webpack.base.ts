@@ -2,10 +2,9 @@ import { Configuration, DefinePlugin } from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import WebpackBar from 'webpackbar'
 import * as dotenv from 'dotenv'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import path from 'path'
 import { isDev } from './constants'
-
-const path = require('path')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 console.log('NODE_ENV', process.env.NODE_ENV)
 console.log('BASE_ENV', process.env.BASE_ENV)
@@ -15,7 +14,7 @@ const envConfig = dotenv.config({
   path: path.resolve(__dirname, `../env/.env.${process.env.BASE_ENV}`)
 })
 
-const tsxRegex = /\.(ts|tsx)$/
+const tsxRegex = /\.(js|ts|tsx)$/
 const cssRegex = /\.css$/
 const lessRegex = /\.less$/
 const imageRegex = /\.(png|jpe?g|gif|svg)$/i
@@ -31,15 +30,25 @@ const styleLoadersArray = [
   'postcss-loader'
 ]
 
-const baseConfig: Configuration = {
-  entry: path.join(__dirname, '../src/index.tsx'), // 入口文件
-  // 打包出口文件
+export const baseConfig: Configuration = {
+  target: 'web',
+  entry: {
+    main: path.join(__dirname, '../src/index.tsx')
+  }, // 入口文件
   output: {
     filename: 'static/js/[name].[chunkhash:8].js', // 每个输出js的名称
     path: path.join(__dirname, '../dist'), // 打包结果输出路径
     clean: true, // webpack4需要配置clean-webpack-plugin来删除dist文件,webpack5内置了
     publicPath: '/', // 打包后文件的公共前缀路径
     assetModuleFilename: 'images/[name].[contenthash:8][ext]'
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.less', '.css', '.json'],
+    // 别名需要配置两个地方，这里和 tsconfig.json
+    alias: {
+      '@': path.join(__dirname, '../src')
+    },
+    modules: [path.join(__dirname, '../node_modules')] // 查找第三方模块只在本项目的node_modules中查找
   },
   // loader 配置
   module: {
@@ -48,7 +57,6 @@ const baseConfig: Configuration = {
         test: tsxRegex, // 匹配.ts, tsx文件
         exclude: /node_modules/,
         use: 'babel-loader'
-        // use: ['thread-loader', 'babel-loader'] // 项目变大之后再开启多进程loader
       },
       {
         test: cssRegex, // 匹配 css 文件
@@ -64,7 +72,7 @@ const baseConfig: Configuration = {
               lessOptions: {
                 importLoaders: 2,
                 // 可以加入modules: true，这样就不需要在less文件名加module了
-                // modules: true,
+                modules: true,
                 // 如果要在less中写类型js的语法，需要加这一个配置
                 javascriptEnabled: true
               }
@@ -121,14 +129,6 @@ const baseConfig: Configuration = {
       }
     ]
   },
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.less', '.css', '.json'],
-    // 别名需要配置两个地方，这里和 tsconfig.json
-    alias: {
-      '@': path.join(__dirname, '../src')
-    }
-    // modules: [path.join(__dirname, "../node_modules")], // 查找第三方模块只在本项目的node_modules中查找
-  },
   plugins: [
     new HtmlWebpackPlugin({
       title: 'webpack5-react-ts',
@@ -157,11 +157,18 @@ const baseConfig: Configuration = {
       color: '#85d', // 默认green，进度条颜色支持HEX
       basic: false, // 默认true，启用一个简单的日志报告器
       profile: false // 默认false，启用探查器。
-    }),
+    })
   ],
   cache: {
-    type: 'filesystem' // 使用文件缓存
+    type: 'filesystem', // 使用文件缓存
+    buildDependencies: {
+      // 配置文件修改后，让缓存失效
+      config: [
+        path.join(__dirname, './webpack.base.ts'),
+        path.join(__dirname, './webpack.dev.ts'),
+        path.join(__dirname, './webpack.prod.ts'),
+        path.join(__dirname, '../babel.config.js')
+      ]
+    }
   }
 }
-
-export default baseConfig

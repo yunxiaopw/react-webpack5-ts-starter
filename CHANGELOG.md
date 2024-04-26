@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2024-04-26)
+
+
+### ✨ Features | 新功能
+
+* 🚀 优化打包 ([a664edd](https://github.com/yunxiaopw/it-site/commit/a664eddbf6030343345743524dcb812668f3c658))
+* **优化打包配置:** 🚀 优化打包配置 ([6d0543d](https://github.com/yunxiaopw/it-site/commit/6d0543d5deb8d1d55ebeae4918ec538b06eb3d45))
+
 ## 1.1.0 (2023-03-06)
 
 ### ✏️ Documentation | 文档
